@@ -75,8 +75,8 @@ st.markdown("""
 @st.cache_resource
 def get_connection():
     return psycopg2.connect(
-        host="postgres",
-        port=5432,
+        host="localhost",
+        port=5433,
         dbname="finance_db",
         user="finance_user",
         password="finance_pass"
@@ -85,7 +85,9 @@ def get_connection():
 @st.cache_data(ttl=300)
 def run_query(query):
     conn = get_connection()
-    return pd.read_sql(query, conn)
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
 
 # ── Load base data ────────────────────────────────────────
 @st.cache_data(ttl=300)
@@ -146,19 +148,19 @@ else:
     st.warning("No valid dates found in database.")
     date_range = None
 
-    # City filter
-    cities = ["All"] + sorted(df_full["city"].dropna().unique().tolist())
-    selected_city = st.selectbox("🏙️ City", cities)
+# City filter
+cities = ["All"] + sorted(df_full["city"].dropna().unique().tolist())
+selected_city = st.selectbox("🏙️ City", cities)
 
-    # Income level filter
-    income_levels = ["All"] + sorted(df_full["income_level"].dropna().unique().tolist())
-    selected_income = st.selectbox("💵 Income Level", income_levels)
+# Income level filter
+income_levels = ["All"] + sorted(df_full["income_level"].dropna().unique().tolist())
+selected_income = st.selectbox("💵 Income Level", income_levels)
 
-    st.markdown("---")
-    st.markdown("### 📈 Pipeline Stats")
-    st.metric("Total Transactions", f"{len(df_full):,}")
-    st.metric("Total Customers", f"{df_full['customer_id'].nunique():,}")
-    st.metric("Date Range", f"{df_full['year'].min()}–{df_full['year'].max()}")
+st.markdown("---")
+st.markdown("### 📈 Pipeline Stats")
+st.metric("Total Transactions", f"{len(df_full):,}")
+st.metric("Total Customers", f"{df_full['customer_id'].nunique():,}")
+st.metric("Date Range", f"{df_full['year'].min()}–{df_full['year'].max()}")
 
 # ── Apply filters ─────────────────────────────────────────
 df = df_full.copy()

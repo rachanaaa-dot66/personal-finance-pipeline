@@ -1,203 +1,428 @@
 # 🏦 Personal Finance Data Engineering Pipeline
 
-A complete end-to-end data engineering pipeline built with Cambodia-realistic financial transaction data.
+An end-to-end Data Engineering, Analytics, and Business Intelligence project built using a Cambodia-realistic personal finance dataset.
+
+This project demonstrates the complete data lifecycle: data generation, ETL processing, data warehousing, workflow orchestration, and interactive analytics dashboards.
 
 ---
 
-## 🎯 Project Overview
+# 🎯 Project Overview
 
-This project simulates a real-world personal finance analytics platform for Cambodia, demonstrating a full modern data engineering stack — from raw data simulation through ETL processing, database storage, and interactive dashboard analytics.
+This project simulates a real-world personal finance analytics platform for Cambodia.
 
----
-
-## 🧱 Tech Stack
-
-| Layer | Tool |
-|---|---|
-| Data Simulation | Python (Faker, Pandas, NumPy) |
-| Big Data ETL | Apache Spark (PySpark) |
-| Database | PostgreSQL |
-| Visualization | Metabase |
-| Containerization | Docker |
-| Version Control | Git + GitHub |
+The pipeline generates over 1 million financial transactions, introduces realistic data quality issues, cleans and transforms the data using Apache Spark, loads the results into PostgreSQL, validates the warehouse using Apache Airflow, and delivers insights through Metabase and Streamlit dashboards.
 
 ---
 
-## 📂 Project Structure
+# 🏗️ Architecture
 
+```text
+Python Data Simulation
+          ↓
+      Raw CSV Files
+          ↓
+     PySpark ETL
+          ↓
+ PostgreSQL Warehouse
+          ↓
+ ┌───────────────────┬───────────────────┐
+ │                   │
+ ↓                   ↓
+Metabase        Streamlit
+Dashboard       Analytics App
+ │                   │
+ └─────────┬─────────┘
+           ↓
+Apache Airflow
+Validation & Monitoring
 ```
+
+---
+
+# 🧱 Tech Stack
+
+| Layer                  | Technology              |
+| ---------------------- | ----------------------- |
+| Programming            | Python                  |
+| Data Processing        | Apache Spark (PySpark)  |
+| Database               | PostgreSQL              |
+| Dashboarding           | Metabase                |
+| Analytics App          | Streamlit               |
+| Workflow Orchestration | Apache Airflow          |
+| Containerization       | Docker & Docker Compose |
+| Version Control        | Git & GitHub            |
+
+---
+
+# 📂 Project Structure
+
+```text
 personal_finance_pipeline/
 │
 ├── data/
-│   ├── raw/                          # 10 raw transaction chunk CSVs (gitignored)
-│   └── processed/                    # Cleaned output CSVs (gitignored)
+│   ├── raw/
+│   └── processed/
 │
 ├── scripts/
-│   ├── simulation-categories.py      # Generate categories reference table
-│   ├── simulation-customers.py       # Generate 400 Cambodian customers
-│   ├── simulation-transactions.py    # Generate 1M+ transactions with messy data
-│   ├── combine_csv.py                # Merge 10 chunk files into one
-│   └── spark_etl.py                  # PySpark ETL — clean, transform, load to PostgreSQL
+│   ├── simulation-categories.py
+│   ├── simulation-customers.py
+│   ├── simulation-transactions.py
+│   ├── combine_csv.py
+│   └── spark_etl.py
+│
+├── airflow/
+│   └── dags/
+│       └── finance_pipeline_dag.py
 │
 ├── sql/
-│   └── init.sql                      # PostgreSQL schema (auto-runs on container start)
+│   └── init.sql
 │
-├── docker-compose.yml                # Spark + PostgreSQL + Metabase
+├── streamlit_app.py
+├── docker-compose.yml
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## 🔄 Pipeline Workflow
+# 🔄 Pipeline Workflow
 
+### Step 1 — Data Simulation
+
+Generate realistic Cambodian personal finance data:
+
+* Customer profiles
+* Spending categories
+* Financial transactions
+* Income and savings records
+
+### Step 2 — Data Quality Issues Injection
+
+The simulation intentionally introduces:
+
+* Duplicate records
+* Missing values
+* Mixed date formats
+* Currency inconsistencies
+* Text formatting issues
+* Invalid values and anomalies
+
+### Step 3 — PySpark ETL
+
+Process and clean raw data using Apache Spark:
+
+* Remove duplicates
+* Standardize dates
+* Normalize text fields
+* Handle null values
+* Detect anomalies
+* Generate derived attributes
+* Load clean data into PostgreSQL
+
+### Step 4 — Data Warehouse
+
+Store cleaned data in PostgreSQL using a star-schema design.
+
+### Step 5 — Dashboard & Analytics
+
+Provide business insights through:
+
+* Metabase dashboards
+* Streamlit analytics application
+
+### Step 6 — Airflow Validation
+
+Validate warehouse quality using automated checks.
+
+---
+
+# 🧪 Simulated Data Quality Issues
+
+| Issue                  | Description                             |
+| ---------------------- | --------------------------------------- |
+| Duplicate Transactions | ~30,000 duplicate records               |
+| Missing Values         | Payment methods, categories, currencies |
+| Mixed Date Formats     | Multiple date representations           |
+| Text Noise             | Inconsistent casing and spacing         |
+| Currency Variations    | USD and KHR values                      |
+| Invalid Values         | Negative and zero amounts               |
+| Location Variations    | Multiple city name formats              |
+| Outliers               | Extreme age and income values           |
+
+---
+
+# 🧹 ETL Processing
+
+The PySpark ETL pipeline performs:
+
+### Data Cleaning
+
+* Remove duplicate transactions
+* Standardize text formats
+* Normalize city names
+* Convert dates to standard format
+* Clean amount fields
+
+### Data Transformation
+
+* Currency conversion
+* Spending type classification
+* Category mapping
+* Derived feature creation
+
+### Data Quality Validation
+
+* Missing value handling
+* Anomaly detection
+* Data consistency checks
+
+---
+
+# 🗄️ Data Warehouse Schema
+
+### customers
+
+Stores customer demographic information.
+
+| Field              |
+| ------------------ |
+| customer_id        |
+| name               |
+| age                |
+| gender             |
+| city               |
+| occupation         |
+| income_level       |
+| monthly_income_usd |
+
+---
+
+### categories
+
+Stores spending classifications.
+
+| Field         |
+| ------------- |
+| category      |
+| sub_category  |
+| spending_type |
+
+---
+
+### transactions_cleaned
+
+Stores cleaned transactional data.
+
+| Field            |
+| ---------------- |
+| transaction_id   |
+| customer_id      |
+| date             |
+| amount           |
+| currency         |
+| amount_usd       |
+| category         |
+| sub_category     |
+| spending_type    |
+| transaction_type |
+| payment_method   |
+| is_anomaly       |
+
+---
+
+# 📊 Metabase Dashboards
+
+## Financial Overview
+
+Features:
+
+* Total Income
+* Total Expenses
+* Savings Rate
+* Monthly Trends
+* Anomaly Summary
+
+## Spending Analysis
+
+Features:
+
+* Spending by Category
+* Essential vs Non-Essential Spending
+* Top Spending Categories
+* Payment Method Analysis
+
+## Customer Insights
+
+Features:
+
+* Spending by City
+* Spending by Occupation
+* Income Level Distribution
+* Customer Segmentation
+
+## Savings & Income Analysis
+
+Features:
+
+* Savings Trends
+* Income Sources
+* Income-Level Comparisons
+
+---
+
+# 📈 Streamlit Analytics Dashboard
+
+Interactive dashboard built using Streamlit and Plotly.
+
+### Features
+
+* Date range filtering
+* City filtering
+* Income-level filtering
+* KPI cards
+* Interactive charts
+* Customer insights
+* Spending analytics
+* Data quality monitoring
+
+### Pages
+
+1. Financial Overview
+2. Spending Analysis
+3. Customer Insights
+4. Savings & Income
+5. Data Quality Report
+
+---
+
+# ⏰ Apache Airflow Workflow
+
+Airflow is used for:
+
+* Warehouse validation
+* Data quality monitoring
+* Pipeline execution visibility
+
+### Validation Checks
+
+```text
+transactions_cleaned >= 1,000,000
+customers = 400
+categories = 64
 ```
-Step 1 — Data Simulation (Python)
-        ↓
-Step 2 — Combine CSV chunks
-        ↓
-Step 3 — Spark ETL (clean + transform + load)
-        ↓
-Step 4 — PostgreSQL (star schema)
-        ↓
-Step 5 — Metabase Dashboards
-```
+
+Successful execution confirms warehouse integrity.
 
 ---
 
-## 🧪 Intentional Data Messiness (for ETL showcase)
+# 📈 Key Results
 
-The simulation intentionally injects real-world data quality issues:
-
-| Issue | Detail |
-|---|---|
-| Mixed date formats | ISO, DD/MM/YYYY, MM-DD-YYYY |
-| Amount formatting | Comma-separated strings e.g. `"1,250.00"` |
-| Negative/zero amounts | ~3% of rows |
-| Null values | payment_method ~6%, sub_category ~6%, currency ~3% |
-| Casing noise | `"FOOD & BEVERAGE"`, `"food & beverage"`, `"Food & Beverage "` |
-| Duplicate rows | ~3% double-submission simulation |
-| City name variants | `"phnom penh"`, `"PhnomPenh"`, `"Phnom-Penh"` |
-| Age/income outliers | Invalid ages (0, 999), negative incomes |
+| Metric                    | Value     |
+| ------------------------- | --------- |
+| Transactions Generated    | 1,030,000 |
+| Duplicates Removed        | 30,000    |
+| Clean Transactions Loaded | 1,000,000 |
+| Customers                 | 400       |
+| Categories                | 64        |
+| Supported Cities          | 12        |
+| Anomalies Flagged         | 59,448    |
 
 ---
 
-## 🧹 ETL Cleaning Steps (spark_etl.py)
+# 🚀 How to Run
 
-- Remove ~30,000 duplicate rows via `dropDuplicates()`
-- Standardise text casing with `initcap()` and `lower()`
-- Parse 3 date formats → standard `DATE` type
-- Strip comma formatting from amounts → cast to `DOUBLE`
-- Flag anomalous amounts (negative/zero) as `is_anomaly = true`
-- Recalculate missing `amount_usd` from currency + amount
-- Fill nulls — `payment_method` → `"Unknown"`, `sub_category` → `"Uncategorised"`
-- Fix city name variants → canonical names
-- Re-derive `spending_type` from clean categories reference table
-- Load 3 tables to PostgreSQL: `categories`, `customers`, `transactions_cleaned`
+## 1. Generate Data
 
----
-
-## 🗄️ Database Schema (Star Schema)
-
-```
-        customers
-            │
-            │ customer_id
-            │
-transactions_cleaned ──── categories
-                          sub_category
-```
-
-**Fact table:** `transactions_cleaned` (1,000,000 rows)
-**Dimension tables:** `customers` (400 rows), `categories` (64 rows)
-
----
-
-## 📊 Metabase Dashboards
-
-### 1. Financial Overview
-- Total Income KPI: **$129.7M**
-- Total Expense KPI: **$117.4M**
-- Total Anomalies: **59,448**
-- Monthly Income vs Expense trend (line chart)
-
-### 2. Spending Analysis
-- Spending by Category (bar chart)
-- Essential vs Non-Essential (pie chart — 67% / 33%)
-- Top 10 Sub-categories
-- Payment Method breakdown (ABA Bank, Cash KHR/USD, ACLEDA, WING)
-
-### 3. Customer Insights
-- Spending by City (Phnom Penh dominant)
-- Spending by Occupation
-- Customer distribution by Income Level
-- Avg spend per customer by Income Level
-
-### 4. Savings & Income
-- Monthly Savings Trend (~$900K/month)
-- Income by Type (7 income sources)
-- Anomalies by Category
-
----
-
-## 🚀 How to Run
-
-### Prerequisites
-- Docker Desktop installed
-- Python 3.8+
-
-### 1. Generate simulation data
 ```bash
 cd scripts
+
 python simulation-categories.py
 python simulation-customers.py
 python simulation-transactions.py
 python combine_csv.py
 ```
 
-### 2. Start all services
+## 2. Start Infrastructure
+
 ```bash
 docker-compose up -d
 ```
 
-### 3. Run Spark ETL
+## 3. Run PySpark ETL
+
 ```bash
 docker exec spark-master /opt/spark/bin/spark-submit \
-  --master spark://spark-master:7077 \
-  --conf spark.jars.ivy=/tmp/.ivy2 \
-  --packages org.postgresql:postgresql:42.6.0 \
-  /opt/spark/scripts/spark_etl.py
+--master spark://spark-master:7077 \
+--conf spark.jars.ivy=/tmp/.ivy2 \
+--packages org.postgresql:postgresql:42.6.0 \
+/opt/spark/scripts/spark_etl.py
 ```
 
-### 4. Open Metabase
-Go to `http://localhost:3000` and connect to:
-- Host: `postgres`
-- Port: `5432`
-- Database: `finance_db`
-- Username: `finance_user`
-- Password: `finance_pass`
+## 4. Launch Streamlit
+
+```bash
+streamlit run streamlit_app.py
+```
+
+## 5. Open Dashboards
+
+### Metabase
+
+```text
+http://localhost:3000
+```
+
+### Streamlit
+
+```text
+http://localhost:8501
+```
+
+### Spark Master UI
+
+```text
+http://localhost:8090
+```
+
+### Airflow
+
+```text
+http://localhost:8080
+```
 
 ---
 
-## 📈 Key Results
+# 📷 Dashboard Screenshots
 
-| Metric | Value |
-|---|---|
-| Total transactions generated | 1,030,000 |
-| Duplicates removed | 30,000 |
-| Anomalous amounts flagged | 59,448 |
-| Clean rows loaded to PostgreSQL | 1,000,000 |
-| Total Income | $129.7M |
-| Total Expense | $117.4M |
-| Customers | 400 |
-| Cities covered | 12 Cambodian cities |
+Add screenshots here:
+
+```text
+screenshots/
+├── airflow_pipeline.png
+├── metabase_dashboard.png
+├── streamlit_dashboard.png
+```
 
 ---
 
-## 🇰🇭 Cambodia Context
+# 💡 Skills Demonstrated
 
-- Dual currency economy (KHR + USD)
-- Cambodian payment methods: ABA Bank, ACLEDA, WING, Pi Pay, Bakong, TrueMoney
-- Realistic Khmer names and city distribution
-- Income levels reflecting Cambodia's economic structure
-- Spending patterns typical of Cambodian households
+* Data Engineering
+* ETL Development
+* Apache Spark (PySpark)
+* SQL
+* PostgreSQL
+* Data Warehousing
+* Docker
+* Apache Airflow
+* Business Intelligence
+* Dashboard Development
+* Streamlit
+* Data Quality Validation
+* Git & GitHub
+
+---
+
+# 👨‍💻 Author
+
+Developed as a portfolio project to demonstrate modern Data Engineering, Analytics, and Business Intelligence workflows using open-source technologies.
