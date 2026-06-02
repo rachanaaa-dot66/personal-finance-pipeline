@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────
 # Personal Finance Pipeline
-# Services: Spark Master + Worker, PostgreSQL, Metabase
+# Services: Spark, PostgreSQL, Metabase, Streamlit, Airflow
 # ─────────────────────────────────────────────────────────
 
 services:
@@ -15,8 +15,8 @@ services:
       - SPARK_MASTER_PORT=7077
       - SPARK_MASTER_WEBUI_PORT=8080
     ports:
-      - "8090:8080"   # Spark Master Web UI → http://localhost:8090
-      - "7077:7077"   # Workers connect here
+      - "8090:8080"
+      - "7077:7077"
     volumes:
       - ./data:/opt/spark/data
       - ./scripts:/opt/spark/scripts
@@ -33,7 +33,7 @@ services:
       - SPARK_WORKER_CORES=2
       - SPARK_WORKER_WEBUI_PORT=8081
     ports:
-      - "8091:8081"   # Spark Worker Web UI → http://localhost:8091
+      - "8091:8081"
     volumes:
       - ./data:/opt/spark/data
       - ./scripts:/opt/spark/scripts
@@ -51,7 +51,7 @@ services:
       POSTGRES_USER: finance_user
       POSTGRES_PASSWORD: finance_pass
     ports:
-      - "5433:5432"   # Connect from host (DBeaver, pgAdmin, Power BI etc.)
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -68,7 +68,7 @@ services:
     image: metabase/metabase:latest
     container_name: metabase
     ports:
-      - "3000:3000"   # Metabase UI → http://localhost:3000
+      - "3000:3000"
     environment:
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: metabase_db
@@ -82,9 +82,97 @@ services:
     networks:
       - finance-net
 
+  # ── Streamlit Dashboard ────────────────────────────────
+  streamlit:
+    image: python:3.11-slim
+    container_name: streamlit
+    working_dir: /app
+    command: >
+      bash -c "pip install streamlit plotly psycopg2-binary pandas -q &&
+               streamlit run streamlit_app.py
+               --server.port=8501
+               --server.address=0.0.0.0
+               --theme.base=dark
+               --theme.primaryColor=#64ffda
+               --theme.backgroundColor=#0f1117
+               --theme.secondaryBackgroundColor=#1a1f2e
+               --theme.textColor=#ccd6f6"
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./streamlit_app.py:/app/streamlit_app.py
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance-net
+
+  # ── Airflow ────────────────────────────────────────────
+  airflow-init:
+    image: apache/airflow:2.8.0
+    container_name: airflow-init
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://finance_user:finance_pass@postgres/finance_db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    command:
+      - bash
+      - -c
+      - |
+        airflow db migrate
+        airflow users create           --username admin           --password admin           --firstname Admin           --lastname User           --role Admin           --email admin@finance.com
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance-net
+
+  airflow-webserver:
+    image: apache/airflow:2.8.0
+    container_name: airflow-webserver
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://finance_user:finance_pass@postgres/finance_db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=finance_secret_key_2024
+    command: airflow webserver
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - finance-net
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.0
+    container_name: airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://finance_user:finance_pass@postgres/finance_db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=finance_secret_key_2024
+    command: airflow scheduler
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - finance-net
+
 # ── Volumes ────────────────────────────────────────────
 volumes:
   postgres_data:
+  airflow_logs:
 
 # ── Network ────────────────────────────────────────────
 networks:
