@@ -12,7 +12,7 @@ CREATE DATABASE metabase_db;
 
 -- ── Dimension Table: customers ────────────────────────
 CREATE TABLE IF NOT EXISTS customers (
-    customer_id         VARCHAR(10)     PRIMARY KEY,
+    customer_id         VARCHAR(10),
     name                VARCHAR(100),
     age                 INT,
     gender              VARCHAR(10),
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS customers (
 
 -- ── Dimension Table: categories ───────────────────────
 CREATE TABLE IF NOT EXISTS categories (
-    sub_category    VARCHAR(100)    PRIMARY KEY,
+    sub_category    VARCHAR(100),
     category        VARCHAR(50),
     spending_type   VARCHAR(20)
 );
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS categories (
 -- No FK constraints — Spark writes in parallel partitions,
 -- FK checks cause race conditions. Data integrity enforced in ETL instead.
 CREATE TABLE IF NOT EXISTS transactions_cleaned (
-    transaction_id      VARCHAR(36)     PRIMARY KEY,
+    transaction_id      VARCHAR(36),
     customer_id         VARCHAR(10),
     date                DATE,
     amount              NUMERIC(15, 2),
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS transactions_cleaned (
     transaction_type    VARCHAR(20),
     payment_method      VARCHAR(50),
     notes               TEXT,
-    is_anomaly          BOOLEAN DEFAULT FALSE
+    is_anomaly          BOOLEAN         DEFAULT FALSE
 );
 
 -- ── Indexes for dashboard query performance ───────────
