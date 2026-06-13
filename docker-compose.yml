@@ -169,6 +169,21 @@ services:
     networks:
       - finance-net
 
+  # ── pgAdmin ───────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@finance.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5051:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - finance-net
+
 # ── Volumes ────────────────────────────────────────────
 volumes:
   postgres_data:
